@@ -1,0 +1,13 @@
+# Python bytecode (the __pycache__ folders)
+__pycache__/
+*.pyc
+
+# Local database
+workout_history.db
+
+# VS Code settings (optional but recommended)
+.vscode/
+
+# Virtual environments
+venv/
+env/ 
