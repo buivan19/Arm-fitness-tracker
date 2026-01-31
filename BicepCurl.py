@@ -36,11 +36,11 @@ class BicepsCurlTracker:
 
         self.pose = self.mp_pose.Pose(
             static_image_mode=False,
-            model_complexity=1, # Balanced mode
-            smooth_landmarks=True, # Reduce jitter
-            enable_segmentation=False, # Disable unused feature
-            min_detection_confidence=0.7,
-            min_tracking_confidence=0.7
+            model_complexity=0,  
+            smooth_landmarks=False,  
+            enable_segmentation=False,
+            min_detection_confidence=0.5, 
+            min_tracking_confidence=0.5   
         )
 
         self.count = 0
@@ -55,13 +55,8 @@ class BicepsCurlTracker:
 
         self.ELBOW_DRIFT = 0.08
 
-        # Performance optimization
-        self.frame_skip_count = 0
-        self.frame_skip_interval = 2  # Process every 2nd frame
         self.gc_counter = 0
         self.gc_interval = 100
-        self.last_processed_frame = None
-
         
         self.was_attempting_rep = False
         self.last_retry_state = None
@@ -75,8 +70,8 @@ class BicepsCurlTracker:
         self.was_attempting_rep = False
         self.last_retry_state = None
         self.last_sound_time = {}
+    
     def cleanup(self):
-        """Cleanup resources when tracker is being destroyed"""
         try:
             if self.music_playing:
                 self.stop_background_music()
@@ -89,7 +84,6 @@ class BicepsCurlTracker:
                 self.pose.close()
         except Exception as e:
             print(f"Error during cleanup: {e}")
-
 
     def initialize_audio(self):
         if not self.pygame_initialized:
@@ -143,7 +137,6 @@ class BicepsCurlTracker:
         if not self.sounds_loaded:
             return
         
-        # Prevent channel buildup
         if pygame.mixer.get_busy():
             busy_channels = sum(1 for i in range(pygame.mixer.get_num_channels()) 
                               if pygame.mixer.Channel(i).get_busy())
@@ -198,17 +191,18 @@ class BicepsCurlTracker:
             return True, ""
 
     def process_frame(self, frame):
-        # Garbage collection for performance
         self.gc_counter += 1
         if self.gc_counter >= self.gc_interval:
             gc.collect()
             self.gc_counter = 0
         
-        # Frame skipping for better performance
-        self.frame_skip_count += 1
-        if self.frame_skip_count % self.frame_skip_interval != 0:
-            if self.last_processed_frame:
-                return self.last_processed_frame
+        # Downscale the frame before processing for better performance
+        height, width = frame.shape[:2]
+        if width > 640:  
+            scale_factor = 640 / width
+            new_width = 640
+            new_height = int(height * scale_factor)
+            frame = cv2.resize(frame, (new_width, new_height))
         
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         image.flags.writeable = False
@@ -346,17 +340,56 @@ class BicepsCurlTracker:
 if __name__ == "__main__":
     tracker = BicepsCurlTracker()
     cap = cv2.VideoCapture(0)
+    
+    #Frame skipping in main loop
+    cap.set(cv2.CAP_PROP_FPS, 30)  
+    
+    frame_counter = 0
+    process_every_n_frames = 2  
+    last_processed_result = None  
 
+    print("Biceps Curl Tracker - Optimized Version")
+    print("Press 'q' to quit")
+    print("Press 'r' to reset counter")
+    print("Press 'm' to toggle background music")
+    
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
             break
-
-        image, count, feedback = tracker.process_frame(frame)
+        
+        frame_counter += 1
+        
+       #Skip processing for some frames
+        if frame_counter % process_every_n_frames == 0:
+            image, count, feedback = tracker.process_frame(frame)
+            # Store results for skipped frames
+            last_processed_result = (image, count, feedback)
+        else:
+            # For skipped frames, reuse last processed results
+            if last_processed_result is not None:
+                image, count, feedback = last_processed_result
+            else:
+                image, count, feedback = tracker.process_frame(frame)
+                last_processed_result = (image, count, feedback)
+        
         cv2.imshow("Biceps Curl Tracker", image)
-
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord('q'):
             break
+        elif key == ord('r'):
+            tracker.reset()
+            last_processed_result = None  
+            print("Counter reset!")
+        elif key == ord('m'):
+            if tracker.music_playing:
+                tracker.stop_background_music()
+                print("Music stopped")
+            else:
+                tracker.start_background_music()
+                print("Music started")
+        
         if cv2.getWindowProperty("Biceps Curl Tracker", cv2.WND_PROP_VISIBLE) < 1:
             break
         

@@ -36,13 +36,14 @@ class LateralRaiseTracker:
             color=(0, 0, 255), thickness=2, circle_radius=2
         )
         
+        # MediaPipe Configuration
         self.pose = self.mp_pose.Pose(
             static_image_mode=False,
-            model_complexity=1,
-            smooth_landmarks=True,
+            model_complexity=0,  
+            smooth_landmarks=False,  
             enable_segmentation=False,
-            min_detection_confidence=0.7,
-            min_tracking_confidence=0.7
+            min_detection_confidence=0.5,  
+            min_tracking_confidence=0.5    
         )
         
         self.reset()
@@ -89,14 +90,10 @@ class LateralRaiseTracker:
         self.reached_up_state = False
         self.last_feedback = "Ready"
         self.form_status = "good"
-        # Reset audio tracking
         self.last_sound_time = {}        
-        # Performance optimization
-        self.frame_skip_count = 0
-        self.frame_skip_interval = 2
         self.gc_counter = 0
         self.gc_interval = 100
-        self.last_processed_frame = None
+
     def cleanup(self):
         """Cleanup resources when tracker is being destroyed"""
         try:
@@ -183,16 +180,19 @@ class LateralRaiseTracker:
             return True, "" 
     
     def process_frame(self, frame):
-        # Performance optimizations
+        # Garbage collection for performance
         self.gc_counter += 1
         if self.gc_counter >= self.gc_interval:
             gc.collect()
             self.gc_counter = 0
         
-        self.frame_skip_count += 1
-        if self.frame_skip_count % self.frame_skip_interval != 0:
-            if self.last_processed_frame:
-                return self.last_processed_frame
+        # Downscale the frame before processing for better performance
+        height, width = frame.shape[:2]
+        if width > 640:  
+            scale_factor = 640 / width
+            new_width = 640
+            new_height = int(height * scale_factor)
+            frame = cv2.resize(frame, (new_width, new_height))
         
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         image.flags.writeable = False
@@ -383,18 +383,23 @@ class LateralRaiseTracker:
                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
         
         self.last_feedback = feedback
-        # Cache for frame skipping
-        self.last_processed_frame = (image, self.count, feedback)
         
         return image, self.count, feedback, self.state
 
 
-# For standalone use
 if __name__ == "__main__":
     tracker = LateralRaiseTracker()
     
     cap = cv2.VideoCapture(0)
+    
+    # Frame skipping in main loop
+    cap.set(cv2.CAP_PROP_FPS, 30)  
+    
+    frame_counter = 0
+    process_every_n_frames = 2  
+    last_processed_result = None  
 
+    print("Lateral Raise Tracker - Optimized Version")
     print("Press 'q' to quit")
     print("Press 'r' to reset counter")
     print("Press 'm' to toggle background music")
@@ -403,15 +408,30 @@ if __name__ == "__main__":
         ret, frame = cap.read()
         if not ret: 
             break
-            
-        processed_frame, count, feedback, state = tracker.process_frame(frame)
-        cv2.imshow('Lateral Raise Tracker', processed_frame)
+        
+        frame_counter += 1
+        
+        # Skip processing for some frames
+        if frame_counter % process_every_n_frames == 0:
+            # Only process every Nth frame
+            image, count, feedback, state = tracker.process_frame(frame)
+            last_processed_result = (image, count, feedback, state)
+        else:
+            if last_processed_result is not None:
+                image, count, feedback, state = last_processed_result
+            else:
+                # First frame or no previous result, process it
+                image, count, feedback, state = tracker.process_frame(frame)
+                last_processed_result = (image, count, feedback, state)
+        
+        cv2.imshow('Lateral Raise Tracker', image)
         
         key = cv2.waitKey(1) & 0xFF
         if key == ord('q'):
             break
         elif key == ord('r'):
             tracker.reset()
+            last_processed_result = None  
             print("Counter reset!")
         elif key == ord('m'):
             if tracker.music_playing:
