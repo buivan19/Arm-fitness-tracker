@@ -10,6 +10,7 @@ from BicepCurl import BicepsCurlTracker
 from LateralRaise import LateralRaiseTracker
 from overhead_press import OverheadPressTracker
 from instruction import show_instructions
+from performance_monitor import TrackerWithMonitoring
 
 from database import init_db, save_session, get_history 
 init_db()
@@ -65,13 +66,16 @@ if 'tracker' not in st.session_state or st.session_state.get('current_exercise')
             except:
                 pass
     
-    # Create new tracker
+    # Create new tracker with performance monitoring
     if exercise_option == "Bicep Curl":
-        st.session_state.tracker = BicepsCurlTracker()
+        base_tracker = BicepsCurlTracker()
+        st.session_state.tracker = TrackerWithMonitoring(base_tracker, terminal_interval=2.0)
     elif exercise_option == "Lateral Raise":
-        st.session_state.tracker = LateralRaiseTracker()
+        base_tracker = LateralRaiseTracker()
+        st.session_state.tracker = TrackerWithMonitoring(base_tracker, terminal_interval=2.0)
     else:
-        st.session_state.tracker = OverheadPressTracker()
+        base_tracker = OverheadPressTracker()
+        st.session_state.tracker = TrackerWithMonitoring(base_tracker, terminal_interval=2.0)
     
     st.session_state.current_exercise = exercise_option
     st.session_state.music_started = False
@@ -106,11 +110,14 @@ def stop_workout():
 # Function to restart workout
 def restart_workout():
     if exercise_option == "Bicep Curl":
-        st.session_state.tracker = BicepsCurlTracker()
+        base_tracker = BicepsCurlTracker()
+        st.session_state.tracker = TrackerWithMonitoring(base_tracker, terminal_interval=2.0)
     elif exercise_option == "Lateral Raise":
-        st.session_state.tracker = LateralRaiseTracker()
+        base_tracker = LateralRaiseTracker()
+        st.session_state.tracker = TrackerWithMonitoring(base_tracker, terminal_interval=2.0)
     else:
-        st.session_state.tracker = OverheadPressTracker()
+        base_tracker = OverheadPressTracker()
+        st.session_state.tracker = TrackerWithMonitoring(base_tracker, terminal_interval=2.0)
     
     tracker = st.session_state.tracker
     
