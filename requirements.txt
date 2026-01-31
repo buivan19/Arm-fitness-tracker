@@ -6,3 +6,4 @@ pygame==2.6.1
 av==16.1.0
 streamlit==1.52.2
 streamlit-webrtc==0.64.5
+psutil==5.9.8 
