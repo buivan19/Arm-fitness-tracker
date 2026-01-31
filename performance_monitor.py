@@ -1,9 +1,3 @@
-"""
-Performance Monitor for Fitness Tracking Application
-Tracks FPS, memory usage, and end-to-end latency.
-Outputs to terminal and logs to file.
-"""
-
 import time
 import psutil
 import threading
@@ -13,17 +7,9 @@ import json
 
 
 class PerformanceMonitor:
-    """Monitor FPS, memory usage, and latency in real-time."""
     
     def __init__(self, window_size=30, log_to_file=True, terminal_interval=2.0):
-        """
-        Initialize the performance monitor.
         
-        Args:
-            window_size: Number of samples to keep for averaging (default: 30)
-            log_to_file: Whether to log metrics to a file (default: True)
-            terminal_interval: Seconds between terminal prints (default: 2.0)
-        """
         # FPS tracking
         self.frame_times = deque(maxlen=window_size)
         self.last_frame_time = None
@@ -49,7 +35,6 @@ class PerformanceMonitor:
         self.lock = threading.Lock()
         
     def _init_log_file(self):
-        """Initialize the CSV log file with headers."""
         if self.log_to_file:
             try:
                 with open(self.log_file, 'w') as f:
@@ -62,7 +47,6 @@ class PerformanceMonitor:
         self.frame_start_time = time.time()
         
     def end_frame(self):
-        """Call this at the end of frame processing."""
         if self.frame_start_time is None:
             return
             
@@ -93,12 +77,6 @@ class PerformanceMonitor:
                 self._log_to_csv()
             
     def get_metrics(self):
-        """
-        Get current performance metrics.
-        
-        Returns:
-            dict: Dictionary containing FPS, latency, and memory metrics
-        """
         with self.lock:
             metrics = {
                 'fps': 0.0,
@@ -127,7 +105,6 @@ class PerformanceMonitor:
             return metrics
     
     def _print_to_terminal(self):
-        """Print current metrics to terminal."""
         metrics = self.get_metrics()
         print(f"\n[Performance] {metrics['timestamp']}")
         print(f"  FPS: {metrics['fps']:.1f}")
@@ -136,7 +113,6 @@ class PerformanceMonitor:
         print(f"  Memory: {metrics['memory_mb']:.1f} MB")
     
     def _log_to_csv(self):
-        """Append current metrics to CSV log file."""
         metrics = self.get_metrics()
         
         try:
@@ -151,7 +127,6 @@ class PerformanceMonitor:
             print(f"Error writing to log file: {e}")
     
     def reset(self):
-        """Reset all metrics."""
         with self.lock:
             self.frame_times.clear()
             self.latencies.clear()
@@ -163,19 +138,13 @@ class PerformanceMonitor:
 
 # Example integration with existing tracker
 class TrackerWithMonitoring:
-    """Wrapper to add performance monitoring to any tracker."""
     
     def __init__(self, tracker, terminal_interval=2.0):
-        """
-        Args:
-            tracker: The exercise tracker instance (BicepsCurlTracker, etc.)
-            terminal_interval: Seconds between terminal outputs (default: 2.0)
-        """
+        
         self.tracker = tracker
         self.perf_monitor = PerformanceMonitor(terminal_interval=terminal_interval)
     
     def process_frame(self, frame):
-        """Process frame with performance monitoring."""
         self.perf_monitor.start_frame()
         
         # Call the original tracker's process_frame
@@ -186,12 +155,10 @@ class TrackerWithMonitoring:
         return result
     
     def reset(self):
-        """Reset both tracker and performance monitor."""
         self.tracker.reset()
         self.perf_monitor.reset()
     
     def __getattr__(self, name):
-        """Forward any other attribute access to the wrapped tracker."""
         return getattr(self.tracker, name)
 
 
