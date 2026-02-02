@@ -87,7 +87,6 @@ class PerformanceMonitor:
     
     def _log_to_csv(self):
         if not self.enabled: return
-        # Logic ghi file giữ nguyên...
 
 class TrackerWithMonitoring:
     def __init__(self, tracker, terminal_interval=2.0):
@@ -98,7 +97,6 @@ class TrackerWithMonitoring:
             self.perf_monitor = PerformanceMonitor(terminal_interval=terminal_interval)
     
     def process_frame(self, frame):
-        # Nếu tắt, gọi trực tiếp tracker và thoát ngay lập tức (Zero overhead)
         if not self.enabled:
             return self.tracker.process_frame(frame)
             
