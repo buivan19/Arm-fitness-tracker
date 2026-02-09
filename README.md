@@ -58,12 +58,15 @@ This is a demo of our project: https://drive.google.com/drive/folders/1CVXR33rO-
 <img width="338" height="172" alt="01" src="https://github.com/user-attachments/assets/699a4ce9-4e8c-4aec-bef9-59498df0fa37" />
 <img width="368" height="181" alt="02" src="https://github.com/user-attachments/assets/5e3f61af-79b4-47ea-a7fd-7fbe8b201b4c" />
 <img width="356" height="178" alt="03" src="https://github.com/user-attachments/assets/99cadd95-e68b-462a-a12b-e7c0582426ee" />
+
 #### Bicep curl
 <img width="161" height="124" alt="04" src="https://github.com/user-attachments/assets/ea69a51e-454c-4b82-8daa-0d9c2fc89dcb" />
 <img width="169" height="126" alt="05" src="https://github.com/user-attachments/assets/517c03d3-900f-49ed-b651-a3f6469e87be" />
+
 #### Lateral raise
 <img width="202" height="139" alt="06" src="https://github.com/user-attachments/assets/02f62505-f678-4657-9ed9-24040c073491" />
 <img width="202" height="141" alt="07" src="https://github.com/user-attachments/assets/1c4bb8b2-541c-4b18-8daa-c953c8f1fae3" />
+
 #### Overhead press
 <img width="176" height="129" alt="08" src="https://github.com/user-attachments/assets/b1eb0d43-c9e1-46c3-8f79-870e391fff78" />
 <img width="174" height="130" alt="09" src="https://github.com/user-attachments/assets/eced6ea1-872d-4c14-91eb-ed348b83c7cc" />
